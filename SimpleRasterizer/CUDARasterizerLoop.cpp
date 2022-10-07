@@ -422,7 +422,7 @@ void CUDARasterizerLoop::MoveToNextFrame() {
         m_AnimTime, m_frameIndex, frameBuffer->getRaw(m_frameIndex));
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
-    //checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
+    checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     cudaExternalSemaphoreSignalParams externalSemaphoreSignalParams;
     memset(&externalSemaphoreSignalParams, 0,
         sizeof(externalSemaphoreSignalParams));
