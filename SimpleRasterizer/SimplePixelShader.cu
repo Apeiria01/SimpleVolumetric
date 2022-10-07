@@ -16,7 +16,7 @@ __global__ void SimplePixelShaderDevice(unsigned int width,
     float freq = 4.0f;
     if (y < height && x < width && abs(v - 0.5 * sinf(u * freq + time)) <= 0.001f) {
         //pixel = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
-        buffer[y * width + x] = make_float4( 1.0f, 0.0f, 0.0f, 0.0f );
+        buffer[y * width + x] = { 1.0f, 0.0f, 0.0f, 0.0f };
     }
     else {
         //buffer[y * width + x] = float4{ 0.0f, 0.0f, 0.0f, 0.0f };
