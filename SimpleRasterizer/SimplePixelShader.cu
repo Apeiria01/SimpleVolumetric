@@ -5,7 +5,7 @@
 #include "GPUMemory.h"
 
 __global__ void SimplePixelShaderDevice(unsigned int width,
-    unsigned int height, float time, Array4f* buffer) {
+    unsigned int height, float time, float4* buffer) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     // calculate uv coordinates
@@ -25,7 +25,7 @@ __global__ void SimplePixelShaderDevice(unsigned int width,
 
 void SimplePixelShader(size_t width, size_t height,
     cudaStream_t streamToRun,
-    float AnimTime, size_t currentFrame, Array4f* buffer) {
+    float AnimTime, size_t currentFrame, float4* buffer) {
     dim3 block(16, 16, 1);
     dim3 grid(UPPER_ALIGN(width, 16) / 16, UPPER_ALIGN(height, 16) / 16, 1);
     SimplePixelShaderDevice << <grid, block, 0, streamToRun >> > (width,
