@@ -6,12 +6,12 @@
 #include "surface_indirect_functions.h"
 
 __global__ void framebufferToTex(cudaSurfaceObject_t tex, unsigned int width,
-    unsigned int height, float4* buffer) {
+    unsigned int height, Array4f* buffer) {
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     float4 pixel = {};
     if (y < height && x < width) {
-        pixel = buffer[y * width + x];
+        pixel = { buffer[y * width + x][0], buffer[y * width + x][1], buffer[y * width + x][2], buffer[y * width + x][3] };
     }
     else {
 
@@ -29,7 +29,7 @@ void CUDAFrameBuffer::WriteToTex(cudaStream_t stream, UINT frameIndex) {
     framebufferToTex <<<grid, block, 0, stream >>>(m_texture.getCudaTex(), res.x(), res.y(), getRaw(frameIndex));
 }
 
-float4* CUDAFrameBuffer::getRaw(int i)
+Array4f* CUDAFrameBuffer::getRaw(int i)
 {
     return frameBuffer[i % FrameCount].data();
 }

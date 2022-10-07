@@ -9,7 +9,7 @@ using Device::FrameCount;
 
 class CUDAFrameBuffer {
 public:
-	float4* getRaw(int i);
+	Array4f* getRaw(int i);
 	CUDAFrameBuffer(size_t width, size_t height, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle);
 	~CUDAFrameBuffer();
 	void WriteToTex(cudaStream_t stream, UINT frameIndex);
@@ -25,7 +25,7 @@ public:
 	}
 private:
 
-	GPUMemory<float4> frameBuffer[FrameCount];
+	GPUMemory<Array4f> frameBuffer[FrameCount];
 	DXTexture m_texture;
 	Array2i res;
 };
