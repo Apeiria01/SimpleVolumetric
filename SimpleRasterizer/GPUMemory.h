@@ -39,6 +39,30 @@ public:
 		copy_from_device(other);
 	}
 
+	void resize(const size_t size) {
+		if (m_size != size) {
+			if (m_size) {
+				try {
+					free_memory();
+				}
+				catch (std::runtime_error error) {
+					throw std::runtime_error(std::string("Could not free memory: ") + error.what());
+				}
+			}
+
+			if (size > 0) {
+				try {
+					allocate_memory(size * sizeof(T));
+				}
+				catch (std::runtime_error error) {
+					throw std::runtime_error(std::string("Could not allocate memory: ") + error.what());
+				}
+			}
+
+			m_size = size;
+		}
+	}
+
 
 	void allocate_memory(size_t n_bytes) {
 		if (n_bytes == 0) {
@@ -48,6 +72,7 @@ public:
 		(cudaMalloc(&rawptr, n_bytes));
 		m_data = (T*)(rawptr);
 		total_n_bytes_allocated() += n_bytes;
+		m_size = n_bytes;
 	}
 
 	void free_memory() {

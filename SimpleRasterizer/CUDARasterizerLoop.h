@@ -7,6 +7,7 @@
 #include "Device.h"
 #include "CUDAFrameBuffer.h"
 #include "SimplePixelShader.h"
+#include "CUPipeline.h"
 
 using namespace DirectX;
 
@@ -56,6 +57,9 @@ private:
 	HANDLE m_fenceEvent;
 	ComPtr<ID3D12Fence> m_fence;
 	UINT64 m_fenceValues[FrameCount];
+
+	GPUMemory<ColoredVertexData> m_CUDAVertex;
+	CUPipeline* m_pipeline;
 
 	// CUDA objects
 	cudaExternalMemoryHandleType m_externalMemoryHandleType;

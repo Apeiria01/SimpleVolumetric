@@ -41,6 +41,9 @@
     <ClInclude Include="SimplePixelShader.h">
       <Filter>CUPipeline</Filter>
     </ClInclude>
+    <ClInclude Include="CUPipeline.h">
+      <Filter>CUPipeline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12CudaSample.cpp" />
@@ -62,6 +65,9 @@
       <Filter>CUPipeline</Filter>
     </CudaCompile>
     <CudaCompile Include="SimplePixelShader.cu">
+      <Filter>CUPipeline</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUPipeline.cu">
       <Filter>CUPipeline</Filter>
     </CudaCompile>
   </ItemGroup>

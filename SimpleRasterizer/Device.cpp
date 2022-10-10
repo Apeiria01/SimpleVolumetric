@@ -10,6 +10,7 @@ UINT Device::NodeMask;
 
 void Device::InitDevice(HWND hWnd)
 {
+	
 	UINT dxgiFactoryFlags = 0;
 #if defined(_DEBUG)
 	{
@@ -50,7 +51,6 @@ void Device::InitDevice(HWND hWnd)
 	DXGI_ADAPTER_DESC1 desc;
 	deviceAdapter->GetDesc1(&desc);
 
-
 	int num_cuda_devices = 0;
 	checkCudaErrors(cudaGetDeviceCount(&num_cuda_devices));
 
@@ -67,7 +67,7 @@ void Device::InitDevice(HWND hWnd)
 				devProp.luid + sizeof(desc.AdapterLuid.LowPart),
 				sizeof(desc.AdapterLuid.HighPart)) == 0)) {
 			checkCudaErrors(cudaSetDevice(devId));
-			
+
 			NodeMask = devProp.luidDeviceNodeMask;
 			for (int i = 0; i < FrameCount; i++) {
 				checkCudaErrors(cudaStreamCreate(&Streams[i]));
