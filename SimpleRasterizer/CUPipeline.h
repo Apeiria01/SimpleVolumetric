@@ -3,35 +3,48 @@
 #include <Eigen/Core>
 #include <wrl.h>
 #include "CUDAFrameBuffer.h"
-using Eigen::Array4f;
-struct ColoredVertexData {
-	Array4f position;
-	Array4f color;
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-};
+#include "ShaderStructs.h"
 
-struct ColoredPixelData {
-	Array4f positionCameraSpace;
-	Array4f color;
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-};
 
-struct ColoredVertexTrianglePrimitive {
+struct VertexTrianglePrimitive {
 	ColoredVertexData vertexData[3];
+	__host__ __device__ ColoredVertexData& operator[](UINT index) {
+		return vertexData[index];
+	}
 };
+
+struct NaniteStyleTrianglePrimitive {
+	Vector2i boundingBoxMin;
+	Vector2i boundingBoxMax;
+	Vector2f edge_A2B;
+	Vector2f edge_B2C;
+	Vector2f edge_C2A;
+	float C0;
+	float C1;
+	float C2;
+	Vector3f depth_plane;
+	//Depth should be here
+
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
+
 
 class CUPipeline {
 public:
-	CUPipeline(CUDAFrameBuffer* buffer);
+	CUPipeline();
 	~CUPipeline();
-	void setFrameBufferAndStream();
+	void setFrameBufferAndStream(GPUMemory<Array4f>* gpuFrameBuffer, cudaStream_t stream);
 	void setPipelineResource(GPUMemory<ColoredVertexData>* ExternalVertexArray, GPUMemory<UINT>* ExternalIndexArray);
-	void primitiveAssembly(cudaStream_t stream, UINT numVertex);
-	void rasterize(cudaStream_t stream, UINT num, UINT frameNum, UINT width, UINT height);
+	void setRenderTargetSize(UINT renderTargetWidth, UINT renderTargetHeight);
+	void primitiveAssembly(UINT numVertex);
+	void rasterize(UINT num);
 private:
 	GPUMemory<ColoredVertexData>* m_ExternalVertexArray;
 	GPUMemory<UINT>* m_ExternalIndexArray;
-	GPUMemory<ColoredVertexTrianglePrimitive> m_LocalTriangleArray;
-	CUDAFrameBuffer* m_frameBuffer;
+	GPUMemory<VertexTrianglePrimitive> m_LocalTriangleArray;
+	GPUMemory<Array4f>* m_ExternalFrameBuffer;
+	cudaStream_t m_stream;
+	UINT m_width;
+	UINT m_height;
 	UINT currentStage;
 };

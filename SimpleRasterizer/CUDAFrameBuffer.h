@@ -4,12 +4,16 @@
 #include "DXTexture.h"
 using Eigen::Array4f;
 using Eigen::Array2i;
+
 #include "Device.h"
 using Device::FrameCount;
 
 class CUDAFrameBuffer {
 public:
 	Array4f* getRaw(int i);
+	inline GPUMemory<Array4f>* getWrap(int i) {
+		return &frameBuffer[i % FrameCount];
+	}
 	CUDAFrameBuffer(size_t width, size_t height, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle);
 	~CUDAFrameBuffer();
 	void WriteToTex(cudaStream_t stream, UINT frameIndex);

@@ -6,12 +6,33 @@
 #include <DirectXMath.h>
 #include <cuda_runtime.h>
 #include "helper_cuda.h"
+#include <Eigen/Core>
 
 #define UPPER_ALIGN(A,B) ((UINT)(((A)+((B)-1))&~(B - 1)))
 
 using namespace DirectX;
+using Eigen::Array4f;
+using Eigen::Array3f;
+using Eigen::Vector3f;
+using Eigen::Vector4f;
+using Eigen::Array2f;
+using Eigen::Array2i;
+using Eigen::Vector2i;
+using Eigen::Vector2f;
+using Eigen::Matrix4f;
+struct ColoredVertexData {
+	Vector4f position;
+	Array4f color;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
 
-struct TexturedVertex
+struct ColoredPixelData {
+	Array4f positionCameraSpace;
+	Array4f color;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
+
+struct DXTexturedVertex
 {
     XMFLOAT4 position;
     XMFLOAT2 texCoord;
@@ -20,10 +41,3 @@ struct TexturedVertex
 struct Texture {
     XMFLOAT4 color;
 };
-void AllocateFrameBuffer(size_t width, size_t height);
-
-void ReleaseFrameBuffer();
-
-void CUDAWriteToTex(size_t width, size_t height,
-    cudaSurfaceObject_t cudaDevVertptr, cudaStream_t streamToRun,
-    float AnimTime, size_t currentFrame);

@@ -133,7 +133,7 @@ void CUDARasterizerLoop::LoadPipeline() {
 // Load the sample assets.
 void CUDARasterizerLoop::LoadAssets() {
     // Create a root signature.
-    TexturedVertex triangleVertices[] =
+    DXTexturedVertex triangleVertices[] =
     {
         { { 1.0f, 1.0f, 0.0f, 1.0f}, { 1.0f, 0.0f } },
         { { 1.0f, -1.0f, 0.0f, 1.0f}, { 1.0f, 1.0f }},
@@ -142,9 +142,9 @@ void CUDARasterizerLoop::LoadAssets() {
     };
 
     ColoredVertexData cudaVertices[] = {
-        {{268.0f, 300.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
-        {{368.0f, 300.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
-        {{268.0f, 330.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
+        {{1260.0f, 200.0f, 32.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
+        {{936.0f, 200.0f, 32.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
+        {{936.0f, 150.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
     };
     {
         CD3DX12_DESCRIPTOR_RANGE1 range[3];
@@ -238,7 +238,7 @@ void CUDARasterizerLoop::LoadAssets() {
 
     // Create the vertex buffer.
     {
-        const UINT trianglesSize = sizeof(TexturedVertex) * 4;
+        const UINT trianglesSize = sizeof(DXTexturedVertex) * 4;
 
 
 
@@ -256,18 +256,19 @@ void CUDARasterizerLoop::LoadAssets() {
             m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
 
         m_texturedBufferView.BufferLocation = m_texturedVertex->GetGPUVirtualAddress();
-        m_texturedBufferView.StrideInBytes = sizeof(TexturedVertex);
+        m_texturedBufferView.StrideInBytes = sizeof(DXTexturedVertex);
         m_texturedBufferView.SizeInBytes = trianglesSize;
         frameBuffer = new CUDAFrameBuffer(m_width, m_height, 
             m_textureHeap->GetCPUDescriptorHandleForHeapStart(), m_textureHeap->GetGPUDescriptorHandleForHeapStart());
-        m_pipeline = new CUPipeline(frameBuffer);
         frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
-        m_pipeline->setPipelineResource(&m_CUDAVertex, nullptr);
+        m_CUDAPipeline.setFrameBufferAndStream(frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
+        m_CUDAPipeline.setPipelineResource(&m_CUDAVertex, nullptr);
+        m_CUDAPipeline.setRenderTargetSize(m_width, m_height);
         //SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex],
         //    m_AnimTime, m_frameIndex, frameBuffer->getRaw(m_frameIndex));
-        m_pipeline->primitiveAssembly(Device::Streams[m_frameIndex], 3);
+        m_CUDAPipeline.primitiveAssembly(3);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-        m_pipeline->rasterize(Device::Streams[m_frameIndex], 3, m_frameIndex, m_width, m_height);
+        m_CUDAPipeline.rasterize(3);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
         frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));   
@@ -338,7 +339,6 @@ void CUDARasterizerLoop::OnDestroy() {
     // cleaned up by the destructor.
     WaitForGpu();
     if (frameBuffer) delete frameBuffer;
-    if (m_pipeline) delete m_pipeline;
     //ReleaseFrameBuffer();
     m_CUDAVertex.free_memory();
     checkCudaErrors(cudaDestroyExternalSemaphore(m_externalSemaphore));
@@ -431,12 +431,14 @@ void CUDARasterizerLoop::MoveToNextFrame() {
     //    Device::Streams[m_frameIndex], m_AnimTime, m_frameIndex);
     frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
+    m_CUDAPipeline.setRenderTargetSize(m_width, m_height);
+    m_CUDAPipeline.setFrameBufferAndStream(frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
     SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex],
         m_AnimTime, m_frameIndex, frameBuffer->getRaw(m_frameIndex));
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-    m_pipeline->primitiveAssembly(Device::Streams[m_frameIndex], 3);
+    m_CUDAPipeline.primitiveAssembly(3);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-    m_pipeline->rasterize(Device::Streams[m_frameIndex], 3, m_frameIndex, m_width, m_height);
+    m_CUDAPipeline.rasterize(3);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
     //checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
