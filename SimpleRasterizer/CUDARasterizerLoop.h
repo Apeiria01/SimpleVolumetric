@@ -8,6 +8,8 @@
 #include "CUDAFrameBuffer.h"
 #include "SimplePixelShader.h"
 #include "CUPipeline.h"
+#include "VolumetricData.h"
+#include "ThetaPhiCamera.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -20,6 +22,10 @@ public:
 	virtual void OnRender();
 	virtual void OnDestroy();
 
+	virtual void OnMouseLButtonDown(int x, int y);
+	virtual void OnMouseLButtonUp(int x, int y);
+	virtual void OnMouseMove(int x, int y, bool buttonDown);
+	virtual void OnMouseWhell(int scale);
 private:
 
 	//static const UINT FrameCount = 3;
@@ -40,11 +46,13 @@ private:
 
 	UINT m_rtvDescriptorSize;
 
+
 	// App resources.
 	ComPtr<ID3D12Resource> m_texturedVertex;
 	//ComPtr<ID3D12Resource> m_textureBuffer;
 	D3D12_VERTEX_BUFFER_VIEW m_texturedBufferView;
-	CUDAFrameBuffer* frameBuffer;
+	CUDAFrameBuffer* m_frameBuffer;
+	ThetaPhiCamera* m_camera;
 
 	// Synchronization objects.
 	UINT m_frameIndex;
@@ -54,6 +62,7 @@ private:
 
 	GPUMemory<ColoredVertexData> m_CUDAVertex;
 	CUPipeline m_CUDAPipeline;
+	VolumetricData<unsigned char>* m_volumetricData;
 
 	// CUDA objects
 	cudaExternalMemoryHandleType m_externalMemoryHandleType;
@@ -67,6 +76,10 @@ private:
 	UINT m_nodeMask;
 	float m_AnimTime;
 	void* m_cudaDevVertptr = NULL;
+
+	int m_xStart;
+	int m_yStart;
+	bool m_lButtonPressed;
 
 	void LoadPipeline();
 	//void InitCuda();

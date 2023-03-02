@@ -68,6 +68,11 @@ class DX12WindowLoop {
   virtual void OnKeyDown(UINT8 /*key*/) {}
   virtual void OnKeyUp(UINT8 /*key*/) {}
 
+  virtual void OnMouseLButtonDown(int x, int y) = 0;
+  virtual void OnMouseLButtonUp(int x, int y) = 0;
+  virtual void OnMouseMove(int x, int y, bool buttonDown) = 0;
+  virtual void OnMouseWhell(int sc) = 0;
+
   // Accessors.
   UINT GetWidth() const { return m_width; }
   UINT GetHeight() const { return m_height; }

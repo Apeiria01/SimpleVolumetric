@@ -10,6 +10,7 @@
 #include "CUDARasterizerLoop.h"
 #include <dxgi1_5.h>
 #include "WindowsSecurityAttributes.h"
+#include <d3dcompiler.h>
 
 
 using Device::FrameCount;
@@ -19,7 +20,11 @@ CUDARasterizerLoop::CUDARasterizerLoop(UINT width, UINT height, std::string name
     m_frameIndex(0),
     m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
     m_fenceValues{},
-    m_rtvDescriptorSize(0) {
+    m_rtvDescriptorSize(0),
+    m_lButtonPressed(false),
+    m_xStart(0),
+    m_yStart(0)
+{
     m_viewport = { 0.0f, 0.0f, static_cast<float>(width),
                   static_cast<float>(height) };
     m_AnimTime = 1.0f;
@@ -258,19 +263,30 @@ void CUDARasterizerLoop::LoadAssets() {
         m_texturedBufferView.BufferLocation = m_texturedVertex->GetGPUVirtualAddress();
         m_texturedBufferView.StrideInBytes = sizeof(DXTexturedVertex);
         m_texturedBufferView.SizeInBytes = trianglesSize;
-        frameBuffer = new CUDAFrameBuffer(m_width, m_height, 
+
+        m_frameBuffer = new CUDAFrameBuffer(m_width, m_height, 
             m_textureHeap->GetCPUDescriptorHandleForHeapStart(), m_textureHeap->GetGPUDescriptorHandleForHeapStart());
-        frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
-        m_CUDAPipeline.setFrameBufferAndStream(frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
+        m_frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
+
+        m_volumetricData = new VolumetricData<unsigned char>(Eigen::Array3i{ 32, 32, 32 }, Eigen::Array3f{ 1.0f, 1.0f, 1.0f });
+        auto filePtr = loadRawFile("./Bucky.raw", 32 * 32 * 32);
+        memcpy((void*)m_volumetricData->GetCPUDataPtr(), filePtr, 32 * 32 * 32);
+        m_volumetricData->Activate();
+        delete[32 * 32 * 32] filePtr;
+        m_camera = new ThetaPhiCamera();
+        auto& mat = m_camera->GetMat();
+        CopyMat(&mat, Device::Streams[m_frameIndex]);
+
+        m_CUDAPipeline.setFrameBufferAndStream(m_frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
         m_CUDAPipeline.setPipelineResource(&m_CUDAVertex, nullptr);
         m_CUDAPipeline.setRenderTargetSize(m_width, m_height);
         //SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex],
-        //    m_AnimTime, m_frameIndex, frameBuffer->getRaw(m_frameIndex));
-        m_CUDAPipeline.primitiveAssembly(3);
+        //    m_AnimTime, m_frameIndex, m_frameBuffer->getRaw(m_frameIndex));
+        //m_CUDAPipeline.primitiveAssembly(3);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-        m_CUDAPipeline.rasterize(3);
+        //m_CUDAPipeline.rasterize(3);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-        frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
+        m_frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
         checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));   
     }
 
@@ -315,8 +331,6 @@ void CUDARasterizerLoop::LoadAssets() {
 
 // Render the scene.
 void CUDARasterizerLoop::OnRender() {
-
-
     // Record all the commands we need to render the scene into the command list.
     PopulateCommandList();
 
@@ -338,7 +352,9 @@ void CUDARasterizerLoop::OnDestroy() {
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
     WaitForGpu();
-    if (frameBuffer) delete frameBuffer;
+    if (m_frameBuffer) delete m_frameBuffer;
+    if (m_volumetricData) delete m_volumetricData;
+    if (m_camera) delete m_camera;
     //ReleaseFrameBuffer();
     m_CUDAVertex.free_memory();
     checkCudaErrors(cudaDestroyExternalSemaphore(m_externalSemaphore));
@@ -346,6 +362,35 @@ void CUDARasterizerLoop::OnDestroy() {
     //checkCudaErrors(cudaDestroyExternalMemory(m_externalMemory));
     checkCudaErrors(cudaFree(m_cudaDevVertptr));
     CloseHandle(m_fenceEvent);
+}
+
+void CUDARasterizerLoop::OnMouseLButtonDown(int x, int y)
+{
+    m_lButtonPressed = true;
+    //m_xStart = x;
+    //m_yStart = y;
+    return;
+}
+
+void CUDARasterizerLoop::OnMouseLButtonUp(int x, int y)
+{
+    m_lButtonPressed = false;
+    return;
+}
+
+void CUDARasterizerLoop::OnMouseMove(int x, int y, bool buttonDown)
+{
+    if (buttonDown) {
+        int deltaX = x - m_xStart;
+        int deltaY = y - m_yStart;
+        m_camera->CalcThetaPhiSpin(deltaX, deltaY);
+    }
+    m_xStart = x;
+    m_yStart = y;
+}
+
+void CUDARasterizerLoop::OnMouseWhell(int scale) {
+    m_camera->CalcScale(scale);
 }
 
 void CUDARasterizerLoop::PopulateCommandList() {
@@ -429,18 +474,24 @@ void CUDARasterizerLoop::MoveToNextFrame() {
     m_AnimTime += 0.01f;
     //CUDAWriteToTex(m_width, m_height, m_cuSurface,
     //    Device::Streams[m_frameIndex], m_AnimTime, m_frameIndex);
-    frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
+    m_frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     m_CUDAPipeline.setRenderTargetSize(m_width, m_height);
-    m_CUDAPipeline.setFrameBufferAndStream(frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
-    SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex],
-        m_AnimTime, m_frameIndex, frameBuffer->getRaw(m_frameIndex));
+    m_CUDAPipeline.setFrameBufferAndStream(m_frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
+    m_camera->UpdateSpin();
+    auto& mat = m_camera->GetMat();
+    CopyMat(&mat, Device::Streams[m_frameIndex]);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-    m_CUDAPipeline.primitiveAssembly(3);
+    //SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex], m_AnimTime, m_frameIndex, m_frameBuffer->getRaw(m_frameIndex));
+    VolumetricPixelShader(m_width, m_height, 
+        Device::Streams[m_frameIndex], m_frameBuffer->getRaw(m_frameIndex), 
+        m_volumetricData->GetGPUDataPtr(), m_volumetricData->GetGPUTransferFuncPtr());
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-    m_CUDAPipeline.rasterize(3);
+    //m_CUDAPipeline.primitiveAssembly(3);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
-    frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
+    //m_CUDAPipeline.rasterize(3);
+    checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
+    m_frameBuffer->WriteToTex(Device::Streams[m_frameIndex], m_frameIndex);
     //checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     cudaExternalSemaphoreSignalParams externalSemaphoreSignalParams;
     memset(&externalSemaphoreSignalParams, 0,

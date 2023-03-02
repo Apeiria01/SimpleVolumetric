@@ -6,8 +6,6 @@ CUPipeline::~CUPipeline() {
 	m_LocalTriangleArray.free_memory();
 }
 
-__device__ Matrix4f cameraXmatrix;
-
 __device__ float Min3(float a, float b, float c) {
 	float min = a;
 	if (b < min) min = b;

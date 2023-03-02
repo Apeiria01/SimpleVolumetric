@@ -7,6 +7,9 @@
     <Filter Include="CUPipeline">
       <UniqueIdentifier>{520ef036-e02d-475e-84a4-68b59eaabdf8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ObjectData">
+      <UniqueIdentifier>{07b97de0-1db0-44d7-9ee0-a68b9cc55c5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dx12.h">
@@ -44,6 +47,12 @@
     <ClInclude Include="CUPipeline.h">
       <Filter>CUPipeline</Filter>
     </ClInclude>
+    <ClInclude Include="VolumetricData.h">
+      <Filter>ObjectData</Filter>
+    </ClInclude>
+    <ClInclude Include="ThetaPhiCamera.h">
+      <Filter>CUPipeline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12CudaSample.cpp" />
@@ -57,6 +66,12 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="WindowsSecurityAttributes.cpp">
       <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="VolumetricData.cpp">
+      <Filter>ObjectData</Filter>
+    </ClCompile>
+    <ClCompile Include="ThetaPhiCamera.cpp">
+      <Filter>CUPipeline</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

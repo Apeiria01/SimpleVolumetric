@@ -53,6 +53,7 @@ The MIT License (MIT)
 #pragma once
 
 #include "DX12WindowLoop.h"
+#include <windowsx.h>
 
 class DX12WindowLoop;
 

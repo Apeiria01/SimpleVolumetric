@@ -24,6 +24,8 @@
     <ClInclude Include="CUDARasterizerLoop.h" />
     <ClInclude Include="SimplePixelShader.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="ThetaPhiCamera.h" />
+    <ClInclude Include="VolumetricData.h" />
     <ClInclude Include="Win32Application.h" />
     <ClInclude Include="WindowsSecurityAttributes.h" />
     <ClInclude Include="CUPipeline.h" />
@@ -35,6 +37,8 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CUDARasterizerLoop.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="ThetaPhiCamera.cpp" />
+    <ClCompile Include="VolumetricData.cpp" />
     <ClCompile Include="Win32Application.cpp" />
     <ClCompile Include="WindowsSecurityAttributes.cpp" />
   </ItemGroup>
@@ -51,6 +55,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{68AC08E1-6D82-4CE8-A703-BEE88369D2AD}</ProjectGuid>
     <RootNamespace>SimpleRasterizer</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -68,7 +73,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.0.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -89,6 +94,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -108,6 +114,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,6 +131,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.0.targets" />
   </ImportGroup>
 </Project>

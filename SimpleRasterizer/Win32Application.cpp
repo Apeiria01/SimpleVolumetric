@@ -4,14 +4,17 @@
 
 HWND Win32Application::m_hwnd = nullptr;
 
+int xClickPos;
+int yClickPos;
+
 int Win32Application::Run(DX12WindowLoop* pSample, HINSTANCE hInstance,
                           int nCmdShow) {
   // Parse the command line parameters
-#if _DEBUG
+
     AllocConsole();
     FILE* fp = NULL;
     freopen_s(&fp, "CONOUT$", "w+t", stdout);
-#endif // DEBUG
+
   int argc;
   LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
   pSample->ParseCommandLineArgs(argv, argc);
@@ -57,10 +60,10 @@ int Win32Application::Run(DX12WindowLoop* pSample, HINSTANCE hInstance,
   }
 
   pSample->OnDestroy();
-#if _DEBUG
+
   fclose(stdout);
   FreeConsole();
-#endif // DEBUG
+
   // Return this part of the WM_QUIT message to Windows.
   return static_cast<char>(msg.wParam);
 }
@@ -98,7 +101,18 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message,
         pSample->OnRender();
       }
       return 0;
-
+    case WM_LBUTTONDOWN:
+        pSample->OnMouseLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_LBUTTONUP:
+        pSample->OnMouseLButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_MOUSEMOVE:
+        pSample->OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam & MK_LBUTTON);
+        return 0;
+    case WM_MOUSEWHEEL:
+        pSample->OnMouseWhell(GET_WHEEL_DELTA_WPARAM(wParam));
+        return 0;
     case WM_DESTROY:
       PostQuitMessage(0);
       return 0;

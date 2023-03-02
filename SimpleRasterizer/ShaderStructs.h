@@ -1,8 +1,8 @@
 #pragma once
 
-#include <d3d12.h>
+
 #include <dxgi1_4.h>
-#include <D3Dcompiler.h>
+
 #include <DirectXMath.h>
 #include <cuda_runtime.h>
 #include "helper_cuda.h"
@@ -23,6 +23,12 @@ using Eigen::Matrix4f;
 struct ColoredVertexData {
 	Vector4f position;
 	Array4f color;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
+
+struct CastedRay {
+	Vector4f position;
+	Vector4f direction;
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
