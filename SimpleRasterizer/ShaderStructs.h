@@ -32,6 +32,14 @@ struct CastedRay {
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
+struct Sphere {
+	Vector4f positionAndRadius;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	__host__ __device__ Sphere(float x, float y, float z, float r) {
+		positionAndRadius = { x,y,z,r };
+	}
+};
+
 struct ColoredPixelData {
 	Array4f positionCameraSpace;
 	Array4f color;
@@ -44,6 +52,9 @@ struct DXTexturedVertex
     XMFLOAT2 texCoord;
 };
 
-struct Texture {
-    XMFLOAT4 color;
+struct Material {
+	Array3f albedo;
+	float roughness;
+	float metalness;
+	Array3f emission;
 };

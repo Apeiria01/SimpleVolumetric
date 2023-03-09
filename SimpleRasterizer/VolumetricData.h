@@ -10,6 +10,8 @@ class VolumetricData {
 private:
 	cudaTextureObject_t m_deviceVolumetricTex;
 	cudaTextureObject_t m_transferFunctionTex;
+	cudaSurfaceObject_t m_gradient3DSurface;
+	cudaArray_t m_deviceGradientArr;
 	cudaArray_t m_deviceVolumetricArr;
 	Eigen::Array3i m_size;
 	Eigen::Array3f m_xyzPixelWidth;
@@ -102,25 +104,24 @@ void VolumetricData<DataType>::Activate() {
 	checkCudaErrors(cudaMemcpy2DToArray(d_transferFuncArray, 0, 0, transferFunc,
 		0, sizeof(transferFunc), 1,
 		cudaMemcpyHostToDevice));
-
 	memset(&texRes, 0, sizeof(cudaResourceDesc));
-
 	texRes.resType = cudaResourceTypeArray;
 	texRes.res.array.array = d_transferFuncArray;
-
 	memset(&texDescr, 0, sizeof(cudaTextureDesc));
-
 	texDescr.normalizedCoords =
 		true;  // access with normalized texture coordinates
 	texDescr.filterMode = cudaFilterModeLinear;
-
 	texDescr.addressMode[0] = cudaAddressModeClamp;  // wrap texture coordinates
-
 	texDescr.readMode = cudaReadModeElementType;
-
 	checkCudaErrors(cudaCreateTextureObject(&m_transferFunctionTex, &texRes, &texDescr, NULL));
 
+	checkCudaErrors(cudaMalloc3DArray(&m_deviceGradientArr, &channelDesc2, volumeSize, cudaArraySurfaceLoadStore));//w*h*d, float4
+	cudaResourceDesc gradRes;
+	memset(&gradRes, 0, sizeof(cudaResourceDesc));
 
+	gradRes.resType = cudaResourceTypeArray;
+	gradRes.res.array.array = m_deviceVolumetricArr;
+	cudaCreateSurfaceObject(&m_gradient3DSurface, &gradRes);
 	m_activated = true;
 
 }

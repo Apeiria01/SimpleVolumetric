@@ -53,6 +53,9 @@
     <ClInclude Include="ThetaPhiCamera.h">
       <Filter>CUPipeline</Filter>
     </ClInclude>
+    <ClInclude Include="TracerFunc.h">
+      <Filter>CUPipeline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12CudaSample.cpp" />
@@ -82,6 +85,9 @@
       <Filter>CUPipeline</Filter>
     </CudaCompile>
     <CudaCompile Include="CUPipeline.cu">
+      <Filter>CUPipeline</Filter>
+    </CudaCompile>
+    <CudaCompile Include="TracerFunc.cu">
       <Filter>CUPipeline</Filter>
     </CudaCompile>
   </ItemGroup>

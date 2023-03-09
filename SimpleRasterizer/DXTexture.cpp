@@ -54,7 +54,7 @@ DXTexture::DXTexture(UINT width, UINT height, D3D12_CPU_DESCRIPTOR_HANDLE cpuHan
     externalMemoryTextureDesc.numLevels = 1;
     externalMemoryTextureDesc.flags = cudaArraySurfaceLoadStore;
     checkCudaErrors(cudaExternalMemoryGetMappedMipmappedArray(&cuMipArray, m_externalMemory, &externalMemoryTextureDesc));
-
+    
     cudaArray_t cuArray{};
     checkCudaErrors(cudaGetMipmappedArrayLevel(&cuArray, cuMipArray, 0));
 

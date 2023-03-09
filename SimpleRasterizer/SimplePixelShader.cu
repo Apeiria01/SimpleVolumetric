@@ -54,13 +54,18 @@ __device__ int IntersectAABB(const CastedRay& r, const Eigen::Vector4f& boxMin, 
     return smallest_tmax > largest_tmin;
 }
 
+__device__ float dydTarget(cudaTextureObject_t volumetricData, Eigen::Vector4f base, float step) {
+
+}
+
 __global__ void VolumetricPixelShaderDevice(unsigned int width,
     unsigned int height, Array4f* buffer, 
     cudaTextureObject_t volumetricData, cudaTextureObject_t transferFunctionTex) {
     // composite ray
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-    const UINT maxIterationStep = 64u;
+    constexpr float gradStep = 0.005f;
+    constexpr UINT maxIterationStep = 128u;
     float u = (x / (float)width) * 2.0f - 1.0f;
     float v = (y / (float)height) * 2.0f - 1.0f;
     const Eigen::Vector4f& boxMin = { -1.0f, -1.0f, -1.0f, 1.0f };
@@ -89,7 +94,7 @@ __global__ void VolumetricPixelShaderDevice(unsigned int width,
             };
             float sample = tex3D<float>(volumetricData, texturePosUVW[0], texturePosUVW[1], texturePosUVW[2]);
             float4 c0 = tex1D<float4>(transferFunctionTex, (sample));
-            float trans = exp(-step / r.direction.norm() * sample * 4.0f);
+            float trans = __expf(-step / r.direction.norm() * sample * 16.0f);
             Eigen::Array4f col = { c0.x, c0.y, c0.z, 0.0f };
             //Eigen::Array4f col = transfer(sample);
             colorSum = colorSum + col * colorSum[3] * (1.0f - trans);

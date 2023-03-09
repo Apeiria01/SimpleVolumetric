@@ -25,6 +25,7 @@
     <ClInclude Include="SimplePixelShader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ThetaPhiCamera.h" />
+    <ClInclude Include="TracerFunc.h" />
     <ClInclude Include="VolumetricData.h" />
     <ClInclude Include="Win32Application.h" />
     <ClInclude Include="WindowsSecurityAttributes.h" />
@@ -51,6 +52,7 @@
     <CudaCompile Include="CUDAFrameBuffer.cu" />
     <CudaCompile Include="CUPipeline.cu" />
     <CudaCompile Include="SimplePixelShader.cu" />
+    <CudaCompile Include="TracerFunc.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{68AC08E1-6D82-4CE8-A703-BEE88369D2AD}</ProjectGuid>
@@ -103,8 +105,9 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_86,sm_86</CodeGeneration>
+      <CodeGeneration>compute_50,sm_50;compute_52,sm_52;compute_60,sm_60;compute_61,sm_61;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_89,sm_89;compute_90,sm_90;</CodeGeneration>
       <GPUDebugInfo>true</GPUDebugInfo>
+      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -125,8 +128,9 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_86,sm_86</CodeGeneration>
+      <CodeGeneration>compute_50,sm_50;compute_52,sm_52;compute_60,sm_60;compute_61,sm_61;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_89,sm_89;compute_90,sm_90;</CodeGeneration>
       <GPUDebugInfo>false</GPUDebugInfo>
+      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

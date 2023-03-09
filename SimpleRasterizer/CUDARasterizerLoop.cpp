@@ -151,6 +151,17 @@ void CUDARasterizerLoop::LoadAssets() {
         {{936.0f, 200.0f, 32.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
         {{936.0f, 150.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
     };
+
+    const Sphere Spheres[] = {
+        Sphere(-1.5, -3, 0, 2),
+        Sphere(1, -4, -2, 1),
+        Sphere(0, -10005, 0, 10000),
+        Sphere(0, 0, 10005, 10000),
+        Sphere(0, 10005, 0, 10000),
+        Sphere(-10005, 0, 0, 10000),
+        Sphere(10005, 0, 0, 10000)
+    };
+
     {
         CD3DX12_DESCRIPTOR_RANGE1 range[3];
         CD3DX12_ROOT_PARAMETER1 parameter[3];
