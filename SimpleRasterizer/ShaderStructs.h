@@ -32,6 +32,12 @@ struct CastedRay {
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
+#define stol1(x) (x <= 0.04045f ? x / 12.92f : pow((x + 0.055f) / 1.055f, 2.4f))
+#define stol3(x, y, z) Eigen::Array3f{stol1(x), stol1(y), stol1(z)}
+#define ltos1(x) (x <= 0.0031308f ? x * 12.92f : 1.055f * pow(x, 0.4166667f) - 0.055f)
+#define ltos3(x, y, z) Eigen::Array3f{ltos1(x), ltos1(y), ltos1(z)}
+
+
 struct Sphere {
 	Vector4f positionAndRadius;
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -52,9 +58,21 @@ struct DXTexturedVertex
     XMFLOAT2 texCoord;
 };
 
+constexpr UINT SphereNum = 7u;
+
 struct Material {
 	Array3f albedo;
 	float roughness;
 	float metalness;
-	Array3f emission;
+	__host__ __device__ Material(Array3f a, float r, float m) {
+		albedo = a;
+		roughness = r;
+		metalness = m;
+	}
+
+	__host__ __device__ Material() {
+		albedo = Array3f(0.0f);
+		roughness = 0.0f;
+		metalness = 0.0f;
+	}
 };

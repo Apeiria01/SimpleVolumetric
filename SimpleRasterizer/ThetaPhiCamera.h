@@ -3,6 +3,8 @@
 
 class ThetaPhiCamera {
 private:
+	int m_width;
+	int m_height;
 	Eigen::Array3f m_xyzRotation;
 	Eigen::Array3f m_translation;
 	Eigen::Array3f m_xyzScale;
@@ -10,7 +12,7 @@ private:
 
 public:
 	const Eigen::Matrix4f& GetMat();
-	ThetaPhiCamera();
+	ThetaPhiCamera(int width, int height);
 	void UpdateSpin();
 	void CalcThetaPhiSpin(int dx, int dy);
 	void CalcScale(int sc);

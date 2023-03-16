@@ -2,6 +2,9 @@
 #include "device_launch_parameters.h"
 
 #define UPPER_ALIGN(A,B) ((UINT)(((A)+((B)-1))&~(B - 1)))
+
+__constant__ float deviceViewMat[sizeof(Eigen::Matrix4f) / sizeof(float)];
+
 CUPipeline::~CUPipeline() {
 	m_LocalTriangleArray.free_memory();
 }
@@ -152,6 +155,13 @@ void CUPipeline::setPipelineResource(GPUMemory<ColoredVertexData>* ExternalVerte
 	if (m_LocalTriangleArray.size() < m_ExternalVertexArray->size()) {
 		m_LocalTriangleArray.resize(m_ExternalVertexArray->size() * 4);
 	}
+}
+
+void CUPipeline::CopyMatrix(const Eigen::Matrix4f* src, cudaStream_t streamToRun) {
+	checkCudaErrors(
+		cudaMemcpyToSymbolAsync(deviceViewMat, src, sizeof(Eigen::Matrix4f), 0Ui64, cudaMemcpyHostToDevice, streamToRun)
+	);
+	return;
 }
 
 void CUPipeline::primitiveAssembly(UINT numVertex) {

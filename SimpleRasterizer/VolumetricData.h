@@ -65,7 +65,7 @@ void VolumetricData<DataType>::Activate() {
 	copyParams.extent = volumeSize;
 	copyParams.kind = cudaMemcpyHostToDevice;
 	checkCudaErrors(cudaMemcpy3D(&copyParams));
-
+	
 	cudaResourceDesc texRes;
 	memset(&texRes, 0, sizeof(cudaResourceDesc));
 

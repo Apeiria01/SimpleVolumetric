@@ -27,7 +27,7 @@ public:
 	virtual void OnMouseMove(int x, int y, bool buttonDown);
 	virtual void OnMouseWhell(int scale);
 private:
-
+	int m_cumulativeFrame;
 	//static const UINT FrameCount = 3;
 	// Pipeline objects.
 	D3D12_VIEWPORT m_viewport;

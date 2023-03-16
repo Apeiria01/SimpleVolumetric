@@ -38,6 +38,7 @@ public:
 	void setRenderTargetSize(UINT renderTargetWidth, UINT renderTargetHeight);
 	void primitiveAssembly(UINT numVertex);
 	void rasterize(UINT num);
+	void CopyMatrix(const Eigen::Matrix4f* src, cudaStream_t streamToRun);
 private:
 	GPUMemory<ColoredVertexData>* m_ExternalVertexArray;
 	GPUMemory<UINT>* m_ExternalIndexArray;

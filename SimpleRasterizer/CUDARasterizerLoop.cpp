@@ -11,6 +11,7 @@
 #include <dxgi1_5.h>
 #include "WindowsSecurityAttributes.h"
 #include <d3dcompiler.h>
+#include "TracerFunc.h"
 
 
 using Device::FrameCount;
@@ -138,6 +139,7 @@ void CUDARasterizerLoop::LoadPipeline() {
 // Load the sample assets.
 void CUDARasterizerLoop::LoadAssets() {
     // Create a root signature.
+    m_cumulativeFrame = 1;
     DXTexturedVertex triangleVertices[] =
     {
         { { 1.0f, 1.0f, 0.0f, 1.0f}, { 1.0f, 0.0f } },
@@ -152,14 +154,24 @@ void CUDARasterizerLoop::LoadAssets() {
         {{936.0f, 150.0f, 0.0f, 0.0f},{1.0f, 0.0f, 0.0f, 0.0f}},
     };
 
-    const Sphere Spheres[] = {
+    const Sphere spheres[] = {
         Sphere(-1.5, -3, 0, 2),
-        Sphere(1, -4, -2, 1),
+        Sphere(1, -2, -2, 1),
         Sphere(0, -10005, 0, 10000),
-        Sphere(0, 0, 10005, 10000),
+        Sphere(0, 0, -10005, 10000),
         Sphere(0, 10005, 0, 10000),
         Sphere(-10005, 0, 0, 10000),
         Sphere(10005, 0, 0, 10000)
+    };
+
+    const Material materials[] = {
+        Material(Array3f(0.8f, 0.1f, 0.8f), 0.3f, 0.2f),
+        Material(Array3f(1.0f, 0.8f, 0.6f), 0.2f, 0.8f),
+        Material(Array3f(0.7059f), 0.6f, 0.7f),
+        Material(Array3f(0.7059f), 1.0f, 0.1f),
+        Material(Array3f(0.7059f), 1.0f, 0.1f),
+        Material(Array3f(0.7059f, 0.0f, 0.0f), 0.6f, 0.7f),
+        Material(Array3f(0.0f, 0.7059f, 0.0f), 0.2f, 0.9f),
     };
 
     {
@@ -167,9 +179,7 @@ void CUDARasterizerLoop::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 parameter[3];
         m_CUDAVertex.allocate_memory(3 * sizeof(ColoredVertexData));
         m_CUDAVertex.copy_from_host(cudaVertices, 3);
-        
-
-
+ 
         range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
         range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
@@ -284,9 +294,13 @@ void CUDARasterizerLoop::LoadAssets() {
         memcpy((void*)m_volumetricData->GetCPUDataPtr(), filePtr, 32 * 32 * 32);
         m_volumetricData->Activate();
         delete[32 * 32 * 32] filePtr;
-        m_camera = new ThetaPhiCamera();
+        m_camera = new ThetaPhiCamera(m_width, m_height);
         auto& mat = m_camera->GetMat();
         CopyMat(&mat, Device::Streams[m_frameIndex]);
+
+        CopyMatForR(&mat, Device::Streams[m_frameIndex]);
+        CopySceneData(&spheres[0], 7, Device::Streams[m_frameIndex]);
+        CopyMaterialData(&materials[0], 7, Device::Streams[m_frameIndex]);
 
         m_CUDAPipeline.setFrameBufferAndStream(m_frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
         m_CUDAPipeline.setPipelineResource(&m_CUDAVertex, nullptr);
@@ -395,6 +409,7 @@ void CUDARasterizerLoop::OnMouseMove(int x, int y, bool buttonDown)
         int deltaX = x - m_xStart;
         int deltaY = y - m_yStart;
         m_camera->CalcThetaPhiSpin(deltaX, deltaY);
+        m_cumulativeFrame = 1;
     }
     m_xStart = x;
     m_yStart = y;
@@ -402,6 +417,7 @@ void CUDARasterizerLoop::OnMouseMove(int x, int y, bool buttonDown)
 
 void CUDARasterizerLoop::OnMouseWhell(int scale) {
     m_camera->CalcScale(scale);
+    m_cumulativeFrame = 1;
 }
 
 void CUDARasterizerLoop::PopulateCommandList() {
@@ -485,18 +501,19 @@ void CUDARasterizerLoop::MoveToNextFrame() {
     m_AnimTime += 0.01f;
     //CUDAWriteToTex(m_width, m_height, m_cuSurface,
     //    Device::Streams[m_frameIndex], m_AnimTime, m_frameIndex);
-    m_frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
+    if (m_cumulativeFrame <= 1) m_frameBuffer->Clear(Device::Streams[m_frameIndex], m_frameIndex);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     m_CUDAPipeline.setRenderTargetSize(m_width, m_height);
     m_CUDAPipeline.setFrameBufferAndStream(m_frameBuffer->getWrap(m_frameIndex), Device::Streams[m_frameIndex]);
     m_camera->UpdateSpin();
     auto& mat = m_camera->GetMat();
-    CopyMat(&mat, Device::Streams[m_frameIndex]);
+    CopyMatForR(&mat, Device::Streams[m_frameIndex]);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     //SimplePixelShader(m_width, m_height, Device::Streams[m_frameIndex], m_AnimTime, m_frameIndex, m_frameBuffer->getRaw(m_frameIndex));
-    VolumetricPixelShader(m_width, m_height, 
-        Device::Streams[m_frameIndex], m_frameBuffer->getRaw(m_frameIndex), 
-        m_volumetricData->GetGPUDataPtr(), m_volumetricData->GetGPUTransferFuncPtr());
+    //VolumetricPixelShader(m_width, m_height, 
+    //    Device::Streams[m_frameIndex], m_frameBuffer->getRaw(m_frameIndex), 
+    //    m_volumetricData->GetGPUDataPtr(), m_volumetricData->GetGPUTransferFuncPtr());
+    TracerPixelShader(m_width, m_height, m_frameBuffer->getRaw(m_frameIndex), Device::Streams[m_frameIndex], 4u, m_cumulativeFrame);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
     //m_CUDAPipeline.primitiveAssembly(3);
     checkCudaErrors(cudaStreamSynchronize(Device::Streams[m_frameIndex]));
@@ -524,7 +541,7 @@ void CUDARasterizerLoop::MoveToNextFrame() {
             m_fenceEvent));
         WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     }
-
+    if(m_cumulativeFrame <= 257 * 3) m_cumulativeFrame++;
     // Set the fence value for the next frame.
     m_fenceValues[m_frameIndex] = currentFenceValue + 2;
 }

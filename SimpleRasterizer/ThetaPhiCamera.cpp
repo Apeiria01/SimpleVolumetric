@@ -1,12 +1,14 @@
 #include "ThetaPhiCamera.h"
 #include <Eigen/Core>
 
-ThetaPhiCamera::ThetaPhiCamera()
+ThetaPhiCamera::ThetaPhiCamera(int width, int height)
 {
 	m_cpuView = Eigen::Matrix4f::Identity();
-	m_translation= Eigen::Array3f(0.0f, 0.0f, -4.0f);
+	m_translation= Eigen::Array3f(0.0f, 0.0f, -6.0f);
 	m_xyzRotation = Eigen::Array3f(0.0f, 0.0f, 0.0f);
 	m_xyzScale = Eigen::Array3f(1.0f, 1.0f, 1.0f);
+	m_width = width;
+	m_height = height;
 	UpdateSpin();
 }
 
